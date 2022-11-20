@@ -1,58 +1,97 @@
-//To implement paging memory allocation technique
+// Program to implement paging in C
+#include <stdio.h>
+#include <stdlib.h>
 
-#include<stdio.h>
-#include<stdlib.h>
-#define MAXT 100
-
-
-
-void displaypagetable(int ptable[],int lsize)
+typedef struct
 {
-       printf("\nPage table\n");
-       for(int i=0;i<lsize;i++)
-       {
-                printf("Page no\tFrame No\n");
-                printf("%d\t%d\n",i,ptable[i]);
-       }
+        int page_no;
+        int frame_no;
+} page_table;
+
+int pages, page_size, mem_size;
+page_table pg_tab[100];
+
+void input() // To input the data regarding pages, memory size and the page table
+{
+        printf("Enter the size of the Physical memory(kB): ");
+        scanf("%d", &mem_size);
+
+        printf("Enter the size of one page(kB): ");
+        scanf("%d", &page_size);
+
+        int frames = mem_size / page_size;
+        printf("\nNumber of available frames: %d", frames);
+
+        printf("\nEnter the number of pages: ");
+        scanf("%d", &pages);
+
+        if (pages > frames)
+        {
+                printf("Number of pages cannot exceed the number of frames. Terminating...\n");
+                exit(0);
+        }
+
+        printf("\nInput the page table. Enter frame no as -1 for unallocated pages.\n");
+        printf("Page No.\tFrame No.\n");
+        for (int i = 0; i < pages; ++i)
+        {
+                scanf("%d\t\t%d", &pg_tab[i].page_no, &pg_tab[i].frame_no);
+        }
+        printf("\n");
 }
 
-void displayframetable(int ftable[],int psize)
+void getPhysicalAddress() // To calculate the physical address
 {
-        printf("\nFrame table\n");
-        for(int i=0;i<psize;i++)
-       {
-                printf("Page no\tFrame No\n");
-                printf("%d\t%d\n",i,ftable[i]);
-       }
+        int pg, offset, phy_add, log_add, flag = 0;
+        // printf("\nEnter the page number to be used for calculating the logical address: ");
+        // scanf("%d", &pg);
+        // printf("Enter the offset: ");
+        // scanf("%d", &offset);
+
+        printf("\nEnter the Logical Address: ");
+        scanf("%d", &log_add);
+
+        pg = log_add / page_size;
+        offset = log_add % page_size;
+        printf("Page No: %d\t\tOffset: %d", pg, offset);
+
+        if (log_add > mem_size)
+        {
+                printf("\nLogical Address cannot exceed memory size. Terminating...\n");
+                exit(0);
+        }
+
+        if (pg > pages)
+        {
+                printf("\nPage No cannot exceed total number of pages. Terminating...\n");
+                exit(0);
+        }
+
+        for (int i = 0; i < pages; ++i)
+        {
+                if (pg_tab[i].page_no == pg)
+                {
+                        if (pg_tab[i].frame_no == -1)
+                        {
+                                flag = 1;
+                                break;
+                        }
+                        else
+                        {
+                                phy_add = pg_tab[pg].frame_no * page_size + offset;
+                                break;
+                        }
+                }
+        }
+
+        if (flag == 0)
+                printf("\nThe Physical Address corresponding to the given logical address is: %d\n", phy_add);
+        else
+                printf("\nThe page hasn't yet been allocated in memory yet.\n");
 }
 
-void initialise(int a[],int size)
+void main()
 {
-        for(int i=0;i<size;i++)
-        {
-                a[i] = -1;
-        }
-}
-
-int main()
-{
-        int ptable[MAXT],ftable[MAXT],psize,lsize,size;
-        printf("Enter the size of logical memory\n");
-        scanf("%d",&lsize);
-        printf("Enter the size of physical memory\n");
-        scanf("%d",&psize);
-        initialise(ptable,lsize);
-        initialise(ftable,psize);
-        for(int i=0;i<lsize;i++)
-        {
-                printf("Enter the Frame number where Page %d must be kept",i);
-                scanf("%d",&ptable[i]);
-        }
-        for(int i=0;i<lsize;i++)
-        {
-                ftable[ptable[i]] = i;
-        }
-        displaypagetable(ptable,lsize);
-        displayframetable(ftable,psize);
-        return 0;
+        input();
+        getPhysicalAddress();
 }
